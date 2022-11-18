@@ -1,0 +1,16 @@
+[
+{
+  "modid": "thaliaflares",
+  "name": "thaliaflares",
+  "description": "",
+  "version": "${version}",
+  "mcversion": "${mcversion}",
+  "url": "",
+  "updateUrl": "",
+  "authorList": ["notmi0", "bogo"],
+  "credits": "",
+  "logoFile": "",
+  "screenshots": [],
+  "dependencies": []
+}
+]
