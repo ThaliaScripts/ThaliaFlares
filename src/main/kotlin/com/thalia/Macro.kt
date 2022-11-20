@@ -3,27 +3,51 @@ package com.thalia
 import com.thalia.config.Config
 import com.thalia.events.PacketReceivedEvent
 import com.thalia.mixins.IMinecraft
+import com.thalia.utils.RaytraceUtils
 import com.thalia.utils.RotationUtils
+import gg.essential.universal.UChat
 import net.minecraft.entity.monster.EntityBlaze
 import net.minecraft.network.play.server.S08PacketPlayerPosLook
+import net.minecraft.util.BlockPos
+import net.minecraft.util.Vec3
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent
 import net.minecraftforge.fml.common.gameevent.TickEvent
+import net.minecraftforge.fml.common.gameevent.TickEvent.RenderTickEvent
 import kotlin.math.sqrt
 
 object Macro {
     enum class MacroState {
         Pause,
         None,
+        CantFindBlaze,
         Rotation,
+        WaitingOnRotation,
         Teleporting,
         WaitingOnTeleport,
         Hyperion,
         WaitingOnHyperion
     }
 
+    enum class MacroCantFindState {
+        None,
+        Rotation,
+        WaitingOnRotation,
+        Teleport,
+        WaitingOnTeleport,
+    }
+
+    val middle = Vec3(-366.5, 92.0, -806.5)
+
     var state = MacroState.Pause
         set(value) {
             if (value == MacroState.Teleporting || value == MacroState.Hyperion) {
+                teleportCooldown = Config.teleportWait
+            }
+            field = value
+        }
+    var cantFindState = MacroCantFindState.None
+        set(value) {
+            if (value == MacroCantFindState.Teleport) {
                 teleportCooldown = Config.teleportWait
             }
             field = value
@@ -44,7 +68,7 @@ object Macro {
 
         logger.info("Current State: ${state.name}")
 
-        if (currentBlaze == null || currentBlaze?.isDead == true) {
+        if (state != MacroState.CantFindBlaze && (currentBlaze == null || currentBlaze?.isDead == true || currentBlaze?.health == 0.0f)) {
             state = MacroState.None
         }
 
@@ -52,29 +76,65 @@ object Macro {
             MacroState.None -> {
                 scanForFlares()
                 currentBlaze = listOfBlazes.minByOrNull { it.getDistance(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ) }
-                state = MacroState.Rotation
+                if (currentBlaze == null) {
+                    state = MacroState.CantFindBlaze
+                    cantFindState = MacroCantFindState.None
+                }
+                else {
+                    state = MacroState.Rotation
+                }
+            }
+            MacroState.CantFindBlaze -> {
+                scanForFlares()
+                currentBlaze = listOfBlazes.minByOrNull { it.getDistance(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ) }
+
+                if (currentBlaze != null) {
+                    state = MacroState.Rotation
+                }
+                else {
+                    when (cantFindState) {
+                        MacroCantFindState.None -> {
+                            cantFindState = MacroCantFindState.Rotation
+                        }
+                        MacroCantFindState.Rotation -> {
+                            val rotation = RotationUtils.getRotation(middle)
+                            RotationUtils.setup(rotation, Config.rotationTime.toLong())
+                            cantFindState = MacroCantFindState.WaitingOnRotation
+                        }
+                        MacroCantFindState.Teleport -> {
+                            teleportCooldown--
+
+                            if (mc.thePlayer.inventory.currentItem != Config.aotvSlot) {
+                                mc.thePlayer.inventory.currentItem = Config.aotvSlot
+                                return
+                            }
+
+                            if (teleportCooldown < 0) {
+                                cantFindState = MacroCantFindState.WaitingOnTeleport
+                                (mc as IMinecraft).rightClickMouse()
+                            }
+                        }
+                        else -> {}
+                    }
+                }
             }
             MacroState.Rotation -> {
-                if (currentBlaze == null) {
-                    state = MacroState.None
-                    return
-                }
-
-                RotationUtils.smoothLook(RotationUtils.getRotationToEntity(currentBlaze!!), Config.rotationTicks ) {
-                    state = MacroState.Teleporting
-                }
+                val vec3 = currentBlaze!!.positionVector.add(Vec3(0.0, currentBlaze!!.eyeHeight.toDouble(), 0.0))
+                val rotation = RotationUtils.getRotation(vec3)
+                RotationUtils.setup(rotation, Config.rotationTime.toLong())
+                state = MacroState.WaitingOnRotation
             }
             MacroState.Teleporting -> {
                 teleportCooldown--
 
                 if (mc.thePlayer.inventory.currentItem != Config.aotvSlot) {
-                    mc.thePlayer.inventory.currentItem = Config.aotvSlot - 1
+                    mc.thePlayer.inventory.currentItem = Config.aotvSlot
                     return
                 }
 
                 if (teleportCooldown < 0) {
-                    (mc as IMinecraft).rightClickMouse()
                     state = MacroState.WaitingOnTeleport
+                    (mc as IMinecraft).rightClickMouse()
                 }
             }
             MacroState.Hyperion -> {
@@ -95,6 +155,22 @@ object Macro {
     }
 
     @SubscribeEvent
+    fun onRenderEvent(event: RenderTickEvent) {
+        if (state == MacroState.WaitingOnRotation || (state == MacroState.CantFindBlaze && cantFindState == MacroCantFindState.WaitingOnRotation)) {
+            if (RotationUtils.done) {
+                if (state == MacroState.WaitingOnRotation) {
+                    teleportAgain(mc.thePlayer.positionVector)
+                }
+                else {
+                    cantFindState = MacroCantFindState.Teleport
+                }
+                return
+            }
+            RotationUtils.update()
+        }
+    }
+
+    @SubscribeEvent
     fun onReceivePacket(event: PacketReceivedEvent) {
         if (event.packet !is S08PacketPlayerPosLook) {
             return
@@ -106,24 +182,39 @@ object Macro {
         val diffZ = packet.z - mc.thePlayer.posZ
 
         val distance = toOneDim(diffX, diffY, diffZ)
+        UChat.chat("Teleported: distance: $distance")
         if (distance > 15) {
             state = MacroState.Pause
             return
         }
 
         when (state) {
-            MacroState.WaitingOnTeleport -> {
-                val blazeDistance = toOneDim(packet.x - currentBlaze!!.posX, packet.y - currentBlaze!!.posY, packet.z - currentBlaze!!.posZ)
-
-                state = if (blazeDistance < Config.hyperionRange + 10) {
-                    MacroState.Hyperion
-                }
-                else {
-                    MacroState.Teleporting
+            MacroState.CantFindBlaze -> {
+                if (cantFindState == MacroCantFindState.WaitingOnTeleport) {
+                    cantFindState = MacroCantFindState.Teleport
                 }
             }
+            MacroState.WaitingOnTeleport -> teleportAgain(Vec3(packet.x, packet.y, packet.z))
             MacroState.WaitingOnHyperion -> state = MacroState.None
             else -> {}
+        }
+    }
+
+    fun teleportAgain(vec3: Vec3) {
+        val blazeDistance = toOneDim(vec3.xCoord - currentBlaze!!.posX, vec3.yCoord - currentBlaze!!.posY, vec3.zCoord - currentBlaze!!.posZ)
+
+        if (currentBlaze != null) {
+            val res = RaytraceUtils.rayTrace(mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch, blazeDistance + 5.0)
+            if (res != currentBlaze) {
+                state = MacroState.Rotation
+                return
+            }
+        }
+
+        state = if (blazeDistance < Config.hyperionRange + 10) {
+            MacroState.Hyperion
+        } else {
+            MacroState.Teleporting
         }
     }
 
@@ -132,7 +223,7 @@ object Macro {
 
     fun scanForFlares() {
         listOfBlazes = mc.theWorld.loadedEntityList
-            .filter { it is EntityBlaze && it.name == "Dinnerbone" && mc.thePlayer.canEntityBeSeen(it) }
+            .filter { it is EntityBlaze && it.name == "Dinnerbone" && mc.thePlayer.canEntityBeSeen(it) && !it.isDead && it.health > 0.0f }
             .map { it as EntityBlaze }
     }
 }

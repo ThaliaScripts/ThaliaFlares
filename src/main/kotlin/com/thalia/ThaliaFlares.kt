@@ -49,7 +49,6 @@ class ThaliaFlares {
                 Macro.state = Macro.MacroState.None
             }
             else {
-                RotationUtils.ticks = 0
                 Macro.state = Macro.MacroState.Pause
             }
         }

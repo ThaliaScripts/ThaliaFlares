@@ -102,21 +102,16 @@ object RotationUtils {
     }
 
     fun easeOutCubic(number: Double): Float {
-        return Math.max(0.0, Math.min(1.0, 1.0 - Math.pow(1.0 - number, 3.0))).toFloat()
+        return max(0.0, min(1.0, 1.0 - (1.0 - number).pow(3.0))).toFloat()
     }
 
     fun getNeededChange(startRot: Rotation?, endRot: Rotation): Rotation {
         var yawChng =
             MathHelper.wrapAngleTo180_float(endRot.yaw) - MathHelper.wrapAngleTo180_float(startRot!!.yaw)
         if (yawChng <= -180.0f) {
-            yawChng = 360.0f + yawChng
-        } else if (yawChng > 180.0f) {
-            yawChng = -360.0f + yawChng
-        }
-        if (yawChng < 0.0f) {
             yawChng += 360.0f
-        } else {
-            yawChng -= 360.0f
+        } else if (yawChng > 180.0f) {
+            yawChng += -360.0f
         }
         return Rotation(
             yawChng, endRot.pitch - startRot.pitch
@@ -134,14 +129,14 @@ object RotationUtils {
     fun fovToVec3(vec: Vec3): Float {
         val x = vec.xCoord - mc.thePlayer.posX
         val z = vec.zCoord - mc.thePlayer.posZ
-        val yaw = Math.atan2(x, z) * 57.2957795
+        val yaw = atan2(x, z) * 57.2957795
         return (yaw * -1.0).toFloat()
     }
 
     fun fovToEntity(ent: Entity): Float {
         val x = ent.posX - mc.thePlayer.posX
         val z = ent.posZ - mc.thePlayer.posZ
-        val yaw = Math.atan2(x, z) * 57.2957795
+        val yaw = atan2(x, z) * 57.2957795
         return (yaw * -1.0).toFloat()
     }
 
@@ -169,7 +164,7 @@ object RotationUtils {
         val step = Vector3f(look.xCoord.toFloat(), look.yCoord.toFloat(), look.zCoord.toFloat())
         step.scale(stepSize / step.length())
         var i = 0
-        while (i < Math.floor((range / stepSize).toDouble()) - 2.0) {
+        while (i < floor((range / stepSize).toDouble()) - 2.0) {
             val blockAtPos = BlockPos(position.xCoord, position.yCoord, position.zCoord)
             if (blockAtPos == blockPos) return true
             position = position.add(Vec3(step.x.toDouble(), step.y.toDouble(), step.z.toDouble()))

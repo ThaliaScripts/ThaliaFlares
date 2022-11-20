@@ -12,30 +12,31 @@ object Config : Vigilant(File("./config/ThaliaFlares/config.toml")) {
         name = "Hype Slot",
         category = "Main",
         subcategory = "Slots",
-        min = 1,
-        max = 8
+        min = 0,
+        max = 7
     )
-    var hypeSlot = 1
+    var hypeSlot = 0
 
     @Property(
         type = PropertyType.NUMBER,
         name = "AOTV Slot",
         category = "Main",
         subcategory = "Slots",
-        min = 1,
-        max = 8
+        min = 0,
+        max = 7
     )
-    var aotvSlot = 3
+    var aotvSlot = 2
 
     @Property(
         type = PropertyType.NUMBER,
         name = "Rotation Ticks",
         category = "Main",
         subcategory = "Teleport",
-        min = 1,
-        max = 20
+        min = 50,
+        max = 2000,
+        increment = 50
     )
-    var rotationTicks = 10
+    var rotationTime = 200
 
     @Property(
         type = PropertyType.NUMBER,
@@ -45,7 +46,7 @@ object Config : Vigilant(File("./config/ThaliaFlares/config.toml")) {
         min = 1,
         max = 20
     )
-    var teleportWait = 3
+    var teleportWait = 1
 
     @Property(
         type = PropertyType.NUMBER,
