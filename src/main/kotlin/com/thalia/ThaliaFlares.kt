@@ -1,5 +1,6 @@
 package com.thalia
 
+import com.thalia.config.Config
 import com.thalia.utils.RotationUtils
 import gg.essential.api.EssentialAPI
 import net.minecraft.client.Minecraft
@@ -32,6 +33,9 @@ class ThaliaFlares {
     @Mod.EventHandler
     fun init(event: FMLInitializationEvent?) {
         mc = Minecraft.getMinecraft()
+
+        Config.initialize(); // this mi0 guy forgor to load the config 💀
+
         MinecraftForge.EVENT_BUS.register(this)
         MinecraftForge.EVENT_BUS.register(Macro)
         MinecraftForge.EVENT_BUS.register(RotationUtils)

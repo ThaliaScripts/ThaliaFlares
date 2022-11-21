@@ -4,15 +4,19 @@ import com.thalia.config.Config
 import com.thalia.events.PacketReceivedEvent
 import com.thalia.mixins.IMinecraft
 import com.thalia.utils.RaytraceUtils
+import com.thalia.utils.RenderUtils
 import com.thalia.utils.RotationUtils
 import gg.essential.universal.UChat
+import net.minecraft.client.settings.KeyBinding
 import net.minecraft.entity.monster.EntityBlaze
 import net.minecraft.network.play.server.S08PacketPlayerPosLook
 import net.minecraft.util.BlockPos
 import net.minecraft.util.Vec3
+import net.minecraftforge.client.event.RenderWorldLastEvent
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent
 import net.minecraftforge.fml.common.gameevent.TickEvent
 import net.minecraftforge.fml.common.gameevent.TickEvent.RenderTickEvent
+import java.awt.Color
 import kotlin.math.sqrt
 
 object Macro {
@@ -125,6 +129,10 @@ object Macro {
                 state = MacroState.WaitingOnRotation
             }
             MacroState.Teleporting -> {
+
+                // idea: add check if player is stuck (behind wall or block) at 3x3 coords and if so jump();
+                KeyBinding.setKeyBindState(mc.gameSettings.keyBindJump.keyCode, true);
+                KeyBinding.setKeyBindState(mc.gameSettings.keyBindJump.keyCode, false);
                 teleportCooldown--
 
                 if (mc.thePlayer.inventory.currentItem != Config.aotvSlot) {
@@ -167,6 +175,13 @@ object Macro {
                 return
             }
             RotationUtils.update()
+        }
+    }
+
+    @SubscribeEvent
+    fun on3DRender(event: RenderWorldLastEvent) {
+        if(state != MacroState.Pause && currentBlaze != null && currentBlaze?.isDead == false) {
+            RenderUtils.drawOutlinedEsp(currentBlaze!!.entityBoundingBox.expand(0.4, 0.6, 0.4), Color(255,0,0), 2.0f)
         }
     }
 
