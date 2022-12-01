@@ -1,6 +1,7 @@
 package com.thalia
 
 import com.thalia.config.Config
+import com.thalia.features.GiftESP
 import com.thalia.utils.RotationUtils
 import gg.essential.api.EssentialAPI
 import net.minecraft.client.Minecraft
@@ -39,6 +40,7 @@ class ThaliaFlares {
         MinecraftForge.EVENT_BUS.register(this)
         MinecraftForge.EVENT_BUS.register(Macro)
         MinecraftForge.EVENT_BUS.register(RotationUtils)
+        MinecraftForge.EVENT_BUS.register(GiftESP)
 
         EssentialAPI.getCommandRegistry().registerCommand(FlaresCommand)
 

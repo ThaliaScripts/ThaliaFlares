@@ -197,7 +197,7 @@ object Macro {
         val diffZ = packet.z - mc.thePlayer.posZ
 
         val distance = toOneDim(diffX, diffY, diffZ)
-        UChat.chat("Teleported: distance: $distance")
+        //UChat.chat("Teleported: distance: $distance")
         if (distance > 15) {
             state = MacroState.Pause
             return
