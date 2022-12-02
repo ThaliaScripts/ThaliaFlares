@@ -5,7 +5,7 @@ import com.thalia.events.PacketReceivedEvent
 import com.thalia.mixins.IMinecraft
 import com.thalia.utils.RaytraceUtils
 import com.thalia.utils.RenderUtils
-import com.thalia.utils.RotationUtils
+import com.thalia.utils.Rotation2Utils
 import gg.essential.universal.UChat
 import net.minecraft.client.settings.KeyBinding
 import net.minecraft.entity.monster.EntityBlaze
@@ -101,8 +101,8 @@ object Macro {
                             cantFindState = MacroCantFindState.Rotation
                         }
                         MacroCantFindState.Rotation -> {
-                            val rotation = RotationUtils.getRotation(middle)
-                            RotationUtils.setup(rotation, Config.rotationTime.toLong())
+//                            val rotation = Rotation2Utils.getRotation(middle)
+//                            Rotation2Utils.setup(rotation, Config.rotationTime.toLong())
                             cantFindState = MacroCantFindState.WaitingOnRotation
                         }
                         MacroCantFindState.Teleport -> {
@@ -124,8 +124,8 @@ object Macro {
             }
             MacroState.Rotation -> {
                 val vec3 = currentBlaze!!.positionVector.add(Vec3(0.0, currentBlaze!!.eyeHeight.toDouble(), 0.0))
-                val rotation = RotationUtils.getRotation(vec3)
-                RotationUtils.setup(rotation, Config.rotationTime.toLong())
+//                val rotation = Rotation2Utils.getRotation(vec3)
+//                Rotation2Utils.setup(rotation, Config.rotationTime.toLong())
                 state = MacroState.WaitingOnRotation
             }
             MacroState.Teleporting -> {
@@ -165,7 +165,7 @@ object Macro {
     @SubscribeEvent
     fun onRenderEvent(event: RenderTickEvent) {
         if (state == MacroState.WaitingOnRotation || (state == MacroState.CantFindBlaze && cantFindState == MacroCantFindState.WaitingOnRotation)) {
-            if (RotationUtils.done) {
+            if (Rotation2Utils.done) {
                 if (state == MacroState.WaitingOnRotation) {
                     teleportAgain(mc.thePlayer.positionVector)
                 }
@@ -174,7 +174,7 @@ object Macro {
                 }
                 return
             }
-            RotationUtils.update()
+            Rotation2Utils.update()
         }
     }
 

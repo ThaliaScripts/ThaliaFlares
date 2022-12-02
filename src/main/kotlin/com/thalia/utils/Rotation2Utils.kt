@@ -6,7 +6,7 @@ import net.minecraft.util.*
 import org.lwjgl.util.vector.Vector3f
 import kotlin.math.*
 
-class Rotation(var yaw: Float, var pitch: Float) {
+class Rotation2(var yaw: Float, var pitch: Float) {
 
     fun addYaw(yaw: Float) {
         this.yaw += yaw
@@ -20,15 +20,15 @@ class Rotation(var yaw: Float, var pitch: Float) {
         get() = abs(yaw) + abs(pitch)
 
     override fun toString(): String {
-        return "Rotation{yaw=$yaw, pitch=$pitch}"
+        return "Rotation2{yaw=$yaw, pitch=$pitch}"
     }
 }
 
-object RotationUtils {
+object Rotation2Utils {
     private val mc = Minecraft.getMinecraft()
-    var startRot: Rotation? = null
-    var neededChange: Rotation? = null
-    var endRot: Rotation? = null
+    var startRot: Rotation2? = null
+    var neededChange: Rotation2? = null
+    var endRot: Rotation2? = null
     var startTime: Long = 0
     var endTime: Long = 0
     var done = true
@@ -41,31 +41,31 @@ object RotationUtils {
         floatArrayOf(0.5f, 0.5f, 0.99f)
     )
 
-    fun getRotation(vec: Vec3): Rotation {
+    fun getRotation2(vec: Vec3): Rotation2 {
         val eyes = mc.thePlayer.getPositionEyes(1.0f)
-        return getRotation(eyes, vec)
+        return getRotation2(eyes, vec)
     }
 
-    fun getRotation(from: Vec3, to: Vec3): Rotation {
+    fun getRotation2(from: Vec3, to: Vec3): Rotation2 {
         val diffX = to.xCoord - from.xCoord
         val diffY = to.yCoord - from.yCoord
         val diffZ = to.zCoord - from.zCoord
-        return Rotation(
+        return Rotation2(
             MathHelper.wrapAngleTo180_float((Math.toDegrees(atan2(diffZ, diffX)) - 90.0).toFloat())
                 , -Math.toDegrees(atan2(diffY, sqrt(diffX * diffX + diffZ * diffZ))).toFloat()
         )
     }
 
-    fun getRotation(bp: BlockPos): Rotation {
+    fun getRotation2(bp: BlockPos): Rotation2 {
         val vec = Vec3(bp.x + 0.5, bp.y + 0.5, bp.z + 0.5)
-        return getRotation(vec)
+        return getRotation2(vec)
     }
 
-    fun setup(rot: Rotation, aimTime: Long) {
+    fun setup(rot: Rotation2, aimTime: Long) {
         done = false
-        startRot = Rotation(mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch)
+        startRot = Rotation2(mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch)
         neededChange = getNeededChange(startRot, rot)
-        endRot = Rotation(startRot!!.yaw + neededChange!!.yaw, startRot!!.pitch + neededChange!!.pitch)
+        endRot = Rotation2(startRot!!.yaw + neededChange!!.yaw, startRot!!.pitch + neededChange!!.pitch)
         startTime = System.currentTimeMillis()
         endTime = System.currentTimeMillis() + aimTime
     }
@@ -90,7 +90,7 @@ object RotationUtils {
         }
     }
 
-    fun snapAngles(rot: Rotation) {
+    fun snapAngles(rot: Rotation2) {
         mc.thePlayer.rotationYaw = rot.yaw
         mc.thePlayer.rotationPitch = rot.pitch
     }
@@ -105,7 +105,7 @@ object RotationUtils {
         return max(0.0, min(1.0, 1.0 - (1.0 - number).pow(3.0))).toFloat()
     }
 
-    fun getNeededChange(startRot: Rotation?, endRot: Rotation): Rotation {
+    fun getNeededChange(startRot: Rotation2?, endRot: Rotation2): Rotation2 {
         var yawChng =
             MathHelper.wrapAngleTo180_float(endRot.yaw) - MathHelper.wrapAngleTo180_float(startRot!!.yaw)
         if (yawChng <= -180.0f) {
@@ -113,7 +113,7 @@ object RotationUtils {
         } else if (yawChng > 180.0f) {
             yawChng += -360.0f
         }
-        return Rotation(
+        return Rotation2(
             yawChng, endRot.pitch - startRot.pitch
         )
     }
@@ -140,8 +140,8 @@ object RotationUtils {
         return (yaw * -1.0).toFloat()
     }
 
-    fun getNeededChange(endRot: Rotation): Rotation {
-        val startRot = Rotation(mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch)
+    fun getNeededChange(endRot: Rotation2): Rotation2 {
+        val startRot = Rotation2(mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch)
         return getNeededChange(startRot, endRot)
     }
 
@@ -173,7 +173,7 @@ object RotationUtils {
         return false
     }
 
-    fun getVectorForRotation(pitch: Float, yaw: Float): Vec3 {
+    fun getVectorForRotation2(pitch: Float, yaw: Float): Vec3 {
         val f2 = -MathHelper.cos(-pitch * 0.017453292f)
         return Vec3(
             (MathHelper.sin(-yaw * 0.017453292f - 3.1415927f) * f2).toDouble(),
@@ -187,7 +187,7 @@ object RotationUtils {
         val diffY = vec.yCoord - mc.thePlayer.posY + mc.thePlayer.getEyeHeight()
         val diffZ = vec.zCoord - mc.thePlayer.posZ
         val dist = MathHelper.sqrt_double(diffX * diffX + diffZ * diffZ).toDouble()
-        return getVectorForRotation(
+        return getVectorForRotation2(
             -(MathHelper.atan2(diffY, dist) * 180.0 / Math.PI).toFloat(),
             (MathHelper.atan2(diffZ, diffX) * 180.0 / Math.PI - 90.0).toFloat()
         )

@@ -5,6 +5,10 @@
   "refmap": "thaliaflares.mixins.refmap.json",
   "client": [
     "IMinecraft",
-    "MixinNetworkManager"
+    "MixinEntityPlayerSP",
+    "MixinEntityRenderer",
+    "MixinModelBiped",
+    "MixinNetworkManager",
+    "MixinWorldClient"
   ]
 }
