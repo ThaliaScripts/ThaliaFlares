@@ -37,7 +37,8 @@ class ThaliaFlares {
         Config.initialize(); // this mi0 guy forgor to load the config 💀
 
         MinecraftForge.EVENT_BUS.register(this)
-        MinecraftForge.EVENT_BUS.register(Macro)
+        //MinecraftForge.EVENT_BUS.register(Macro)
+        MinecraftForge.EVENT_BUS.register(GhostMacro)
         MinecraftForge.EVENT_BUS.register(RotationUtils)
 
         EssentialAPI.getCommandRegistry().registerCommand(FlaresCommand)
@@ -49,12 +50,13 @@ class ThaliaFlares {
     @SubscribeEvent
     fun input(event: InputEvent) {
         if (key.isPressed) {
-            if (Macro.state == Macro.MacroState.Pause) {
+            GhostMacro.toggle()
+            /*if (Macro.state == Macro.MacroState.Pause) {
                 Macro.state = Macro.MacroState.None
             }
             else {
                 Macro.state = Macro.MacroState.Pause
-            }
+            }*/
         }
     }
 

@@ -10,7 +10,6 @@ import gg.essential.universal.UChat
 import net.minecraft.client.settings.KeyBinding
 import net.minecraft.entity.monster.EntityBlaze
 import net.minecraft.network.play.server.S08PacketPlayerPosLook
-import net.minecraft.util.BlockPos
 import net.minecraft.util.Vec3
 import net.minecraftforge.client.event.RenderWorldLastEvent
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent
@@ -131,8 +130,8 @@ object Macro {
             MacroState.Teleporting -> {
 
                 // idea: add check if player is stuck (behind wall or block) at 3x3 coords and if so jump();
-                KeyBinding.setKeyBindState(mc.gameSettings.keyBindJump.keyCode, true);
-                KeyBinding.setKeyBindState(mc.gameSettings.keyBindJump.keyCode, false);
+                KeyBinding.setKeyBindState(mc.gameSettings.keyBindJump.keyCode, true)
+                KeyBinding.setKeyBindState(mc.gameSettings.keyBindJump.keyCode, false)
                 teleportCooldown--
 
                 if (mc.thePlayer.inventory.currentItem != Config.aotvSlot) {
